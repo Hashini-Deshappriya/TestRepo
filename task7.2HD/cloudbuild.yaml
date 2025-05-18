@@ -1,0 +1,45 @@
+steps:
+# Step 1: Run unit tests
+- name: 'maven:3.8.4-openjdk-11-slim'
+  entrypoint: 'mvn'
+  args: ['test']
+  id: 'run-tests'
+
+# Step 2: Build jar file with Maven
+- name: 'maven:3.8.4-openjdk-11-slim'
+  entrypoint: 'mvn'
+  args: ['package', '-DskipTests']
+  id: 'build-jar'
+  waitFor: ['run-tests']
+
+# Step 3: Build Docker image
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['build', '-t', 'gcr.io/$PROJECT_ID/spring-demo:$COMMIT_SHA', '.']
+  id: 'build-image'
+  waitFor: ['build-jar']
+
+# Step 4: Push Docker image to Container Registry
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['push', 'gcr.io/$PROJECT_ID/spring-demo:$COMMIT_SHA']
+  id: 'push-image'
+  waitFor: ['build-image']
+
+# Step 5: Deploy to Cloud Run
+- name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+  entrypoint: gcloud
+  args:
+  - 'run'
+  - 'deploy'
+  - 'spring-demo'
+  - '--image=gcr.io/$PROJECT_ID/spring-demo:$COMMIT_SHA'
+  - '--region=us-central1'
+  - '--platform=managed'
+  - '--allow-unauthenticated'
+  waitFor: ['push-image']
+
+# Save images to be used in future steps
+images:
+- 'gcr.io/$PROJECT_ID/spring-demo:$COMMIT_SHA'
+
+# Set timeout to 20 minutes
+timeout: 1200s
