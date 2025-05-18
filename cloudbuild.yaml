@@ -1,5 +1,5 @@
 steps:
-# Step 1: Run unit test
+# Step 1: Run unit tests
 - name: 'maven:3.8.4-openjdk-11-slim'
   entrypoint: 'mvn'
   args: ['test']
