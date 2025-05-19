@@ -2,7 +2,7 @@ options:
   logging: CLOUD_LOGGING_ONLY
 
 steps:
-# Step 1: Run unit testhh
+# Step 1: Run unit test
 - name: 'maven:3.8.4-openjdk-11-slim'
   entrypoint: 'mvn'
   args: ['test']
